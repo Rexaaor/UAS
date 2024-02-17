@@ -3,12 +3,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from streamlit_option_menu import option_menu
+import seaborn as sns
+
 
 @st.cache_data
-#Load Data CSV
-def load_data(url) :
+# Load Data CSV
+def load_data(url):
     df = pd.read_csv(url)
     return df
+
 
 def massa_produk(df_product):
     st.header('Analisis Produk')
@@ -38,6 +41,7 @@ def massa_produk(df_product):
     df_product_id_max_weight = df_product.loc[df_product_weight_max_index, 'product_id']
     st.markdown(f"ID produk yang paling berat adalah **{df_product_id_max_weight}**.")
 
+
 def distribusi_kategori(df_products):
     st.subheader('Distribusi Kategori Produk')
 
@@ -53,9 +57,8 @@ def distribusi_kategori(df_products):
     st.set_option('deprecation.showPyplotGlobalUse', False)
 
     plt.figure(figsize=(12, 6))
-    # Hilangkan atribut warna atau sesuaikan dengan warna yang diinginkan
-    plt.bar(df_product['product_category_name'].value_counts().index,
-            df_product['product_category_name'].value_counts().values)
+    sns.countplot(x='product_category_name', data=df_product,
+                  order=df_product['product_category_name'].value_counts().index, palette='viridis')
     plt.title('Distribusi Top 10 Kategori Produk')
     plt.xlabel('Nama Kategori Produk')
     plt.ylabel('Jumlah Produk')
@@ -64,18 +67,21 @@ def distribusi_kategori(df_products):
 
     st.markdown("Grafik di atas menunjukkan distribusi kategori produk dalam dataset. ...")
 
+
 def kategori_populer(df_products):
     st.set_option('deprecation.showPyplotGlobalUse', False)
     st.subheader("Kategori Paling Populer")
     top_10_kategori = df_product['product_category_name'].value_counts().head(10)
 
     plt.figure(figsize=(12, 6))
-    plt.bar(top_10_kategori.index, top_10_kategori.values, color='viridis')
+    sns.countplot(x='product_category_name', data=df_product,
+                  order=top_10_kategori.index, palette='viridis')
     plt.title('Distribusi Top 10 Kategori Produk')
     plt.xlabel('Nama Kategori Produk')
     plt.ylabel('Jumlah Produk')
     plt.xticks(rotation=45, ha='right')
     st.pyplot()
+
 
 def metode_bayar(df_payment):
     st.subheader('Penggunaan Jenis Pembayaran')
@@ -89,7 +95,7 @@ def metode_bayar(df_payment):
 
     st.subheader("Diagram Batang Distribusi Jenis Pembayaran:")
     plt.figure(figsize=(8, 6))
-    plt.bar(df_payment['payment_type'].value_counts().index, df_payment['payment_type'].value_counts().values)
+    sns.countplot(x='payment_type', data=df_payment)
     plt.title('Distribusi Jenis Pembayaran')
     st.pyplot()
 
@@ -100,6 +106,7 @@ def metode_bayar(df_payment):
     st.write(
         "Berdasarkan diagram batang, Credit Card merupakan pembayaran yang paling umum digunakan oleh para pelanggan.")
     st.write("Untuk transaksi tertinggi yang pernah dilakukan sebesar $", df_payment_value_max)
+
 
 def transaksi(df_customer):
     st.subheader("Informasi Kode Pos Pelanggan Berdasarkan Kota:")
@@ -127,11 +134,12 @@ def transaksi(df_customer):
     distribusi_customer = df_customer['customer_zip_code_prefix'].value_counts()
     top_customer = distribusi_customer.head(10)
     plt.figure(figsize=(10, 7))
-    plt.bar(top_customer.index, top_customer.values, color='red')
+    top_customer.plot(kind='bar', color='red')
     plt.title('Distribusi Customer')
     plt.xlabel('Nama Kode Pos Customer')
     plt.ylabel('Jumlah Customer')
     st.pyplot()
+
 
 def total_produk(df_order_item):
     st.subheader("Total Item dalam Data Produk:")
@@ -184,6 +192,7 @@ def total_produk(df_order_item):
     st.write("Jumlah Produk dalam Marketplace:", df_total_item)
     st.write("Rata-rata harga pembelian produk:", df_order_price)
 
+
 def freight_value(df_order_item):
     st.subheader("Freight Value dalam Data Order Items:")
     df_order_freight = df_order_item['freight_value']
@@ -199,10 +208,13 @@ def freight_value(df_order_item):
     freight_min_value = df_order_item['freight_value'].min()
 
     plt.figure(figsize=(8, 6))
-    plt.bar(['Max', 'Mean', 'Min'], [freight_max_value, freight_mean_value, freight_min_value],
-            color=['#ea3033', '#ffe9a3', '#0f7216'])
-    for i, value in enumerate([freight_max_value, freight_mean_value, freight_min_value]):
-        plt.text(i, value, f'{value:.2f}', ha='center', va='bottom')
+    ax = sns.barplot(x=['Max', 'Mean', 'Min'], y=[freight_max_value, freight_mean_value, freight_min_value],
+                     hue=['Max', 'Mean', 'Min'],
+                     palette=['#ea3033', '#ffe9a3', '#0f7216'], legend=False)
+
+    for p in ax.patches:
+        ax.annotate(f'{p.get_height():.2f}', (p.get_x() + p.get_width() / 2., p.get_height()),
+                    ha='center', va='center', xytext=(0, 10), textcoords='offset points')
 
     plt.ylabel('Freight Value')
     plt.title('Maximum, Rata-Rata, dan Minimum Freight Value')
@@ -226,7 +238,7 @@ with st.sidebar:
                            menu_icon="cast",
                            default_index=0)
 
-if selected == 'Dashboard':
+if (selected == 'Dashboard'):
     st.header(f"Dashboard Analisis E-Commerce")
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
         ["Massa Produk", "Distribusi", "Kategori Populer", "Metode Pembayaran", "Kode Pos", "Produk", "Freight Value"])
