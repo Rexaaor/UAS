@@ -53,8 +53,9 @@ def distribusi_kategori(df_products):
     st.set_option('deprecation.showPyplotGlobalUse', False)
 
     plt.figure(figsize=(12, 6))
+    # Hilangkan atribut warna atau sesuaikan dengan warna yang diinginkan
     plt.bar(df_product['product_category_name'].value_counts().index,
-            df_product['product_category_name'].value_counts().values, color='viridis')
+            df_product['product_category_name'].value_counts().values)
     plt.title('Distribusi Top 10 Kategori Produk')
     plt.xlabel('Nama Kategori Produk')
     plt.ylabel('Jumlah Produk')
